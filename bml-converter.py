@@ -2,32 +2,46 @@ import os
 import argparse
 from gooey import Gooey, GooeyParser
 
+from bml import about
 from bml import bml
 from bml import bss
 from bml import html
 from bml import latex
 from bss import bss2bml
 
-#@Gooey(tabbed_groups=True)
-@Gooey(default_size=(800, 900),
+@Gooey(default_size=(600, 900),
        progress_regex=r"^progress: (?P<current>\d+)/(?P<total>\d+)$",
        progress_expr="current / total * 100",
        optional_cols=4,
-       required_cols=4)
+       required_cols=4,
+       menu=[{
+           'name': 'Help',
+           'items': [{
+               'type': 'AboutDialog',
+               'menuTitle': 'About',
+               'name': 'BML converter',
+               'description': 'Run the various BML converters',
+               'version': about.__version__,
+               'copyright': about.__copyright__,
+               'website': about.__url__,
+               'author(s)': about.__author__,
+               'license': about.__license__
+           }, {
+               'type': 'Link',
+               'menuTitle': 'Documentation',
+               'url': about.__help_url__
+           }]
+       }])
 def main():
-    # bml.args['bss'] = False
-    # bml.args['html'] = False
-    # bml.args['latex'] = False
-
     parser = GooeyParser(description='BML convert')
 
-    file_group = parser.add_argument_group("File options", "Specify input file and output file")
+    file_group = parser.add_argument_group("File options", "Specify input file and output directory")
     file_group.add_argument(
         'inputfile',
         help="BML file",
         widget='FileChooser') 
     file_group.add_argument(
-        'outputfile',
+        'outputdir',
         help="Output directory",
         widget='DirChooser')
 
@@ -79,7 +93,9 @@ def main():
         widget='BlockCheckbox')
     other_group.add_argument(
         "--verbose",
-        action="count",
+#       action="count",
+        type=int,
+        choices=range(0, 3),
         default=bml.args.verbose,
         help="increase output verbosity")
 
@@ -95,13 +111,13 @@ def main():
 
     for c in ['bml2bss', 'bml2html', 'bml2latex', 'bss2bml']:
         if c == 'bml2bss' and bml.args.bml2bss:
-            bss.bml2bss(bml.args.inputfile, bml.args.outputfile)
+            bss.bml2bss(bml.args.inputfile, bml.args.outputdir)
         elif c == 'bml2html' and bml.args.bml2html:
-            html.bml2html(bml.args.inputfile, bml.args.outputfile)
+            html.bml2html(bml.args.inputfile, bml.args.outputdir)
         elif c == 'bml2latex' and bml.args.bml2latex:
-            latex.bml2latex(bml.args.inputfile, bml.args.outputfile)
+            latex.bml2latex(bml.args.inputfile, bml.args.outputdir)
         elif c == 'bss2bml' and bml.args.bss2bml:
-            bss2bml(bml.args.inputfile, bml.args.outputfile)
+            bss2bml(bml.args.inputfile, bml.args.outputdir)
         else:
             continue
         process_nr += 1
