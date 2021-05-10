@@ -48,8 +48,9 @@ dist: bml-converter.spec ## Build distribution.
 	pyinstaller $(PYINSTALLER_OPTIONS) $?
 
 clean: ## Cleanup output files.
-	-$(RM_FR) dist build __pycache__ 2>$(NOWHERE)
+	-$(RM_FR) build __pycache__ 2>$(NOWHERE)
 
 distclean: clean ## Runs clean first and then cleans up dependency include files. 
+	-$(RM_FR) dist 2>$(NOWHERE)
 
-.PHONY: dist help clean distclean
+.PHONY: help spec dist clean distclean

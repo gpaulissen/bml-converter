@@ -1,4 +1,6 @@
 import os
+from os import listdir
+from os.path import isfile, join, dirname
 import argparse
 from gooey import Gooey, GooeyParser
 
@@ -37,9 +39,9 @@ def main():
 
     file_group = parser.add_argument_group("File options", "Specify input file and output directory")
     file_group.add_argument(
-        'inputfile',
-        help="BML file",
-        widget='FileChooser') 
+        'inputdir',
+        help="Directory with BML/BSS file(s)",
+        widget='DirChooser') 
     file_group.add_argument(
         'outputdir',
         help="Output directory",
@@ -104,24 +106,41 @@ def main():
     bml.args.tree = not(bml.args.no_tree)
     bml.args.include_external_files = not(bml.args.dont_include_external_files)
 
+    nr_bml_processes = int(bml.args.bml2bss) + int(bml.args.bml2html) + int(bml.args.bml2latex)
+    nr_bss_processes = int(bml.args.bss2bml)
+
+    bml_files = [f for f in listdir(bml.args.inputdir) if isfile(join(bml.args.inputdir, f)) and f[-4:] == '.bml' and nr_bml_processes > 0]
+    bss_files = [f for f in listdir(bml.args.inputdir) if isfile(join(bml.args.inputdir, f)) and f[-4:] == '.bss' and nr_bss_processes > 0]
+    
+    nr_processes = nr_bml_processes * len(bml_files) + nr_bss_processes * len(bss_files)
+
+    assert nr_processes > 0, 'Number of files to process (%d) and number of generators to launch (%d) must be at least 1.' % ((len(bml_files) + len(bss_files)), (nr_bml_processes + nr_bss_processes))
+
     process_nr = 0
-    nr_processes = int(bml.args.bml2bss) + int(bml.args.bml2html) + int(bml.args.bml2latex) + int(bml.args.bss2bml)
 
-    assert nr_processes > 0, 'Number of generators to launch must be at least 1.'
-
-    for c in ['bml2bss', 'bml2html', 'bml2latex', 'bss2bml']:
-        if c == 'bml2bss' and bml.args.bml2bss:
-            bss.bml2bss(bml.args.inputfile, bml.args.outputdir)
-        elif c == 'bml2html' and bml.args.bml2html:
-            html.bml2html(bml.args.inputfile, bml.args.outputdir)
-        elif c == 'bml2latex' and bml.args.bml2latex:
-            latex.bml2latex(bml.args.inputfile, bml.args.outputdir)
-        elif c == 'bss2bml' and bml.args.bss2bml:
+    if nr_bml_processes > 0:
+        for f in sorted(bml_files):
+            bml.args.inputfile = f
+            content = None # parse each input file just once 
+            for c in ['bml2bss', 'bml2html', 'bml2latex']:
+                if c == 'bml2bss' and bml.args.bml2bss:
+                    content = bss.bml2bss(bml.args.inputfile, bml.args.outputdir, content=content)
+                elif c == 'bml2html' and bml.args.bml2html:
+                    content = html.bml2html(bml.args.inputfile, bml.args.outputdir, content=content)
+                elif c == 'bml2latex' and bml.args.bml2latex:
+                    content = latex.bml2latex(bml.args.inputfile, bml.args.outputdir, content=content)
+                else:
+                    continue
+                process_nr += 1
+                print('progress: %d/%d' % (process_nr, nr_processes))
+    
+    if nr_bss_processes > 0:
+        for f in sorted(bss_files):
+            bml.args.inputfile = f
+            assert bml.args.bss2bml  # just checking
             bss2bml(bml.args.inputfile, bml.args.outputdir)
-        else:
-            continue
-        process_nr += 1
-        print('progress: %d/%d' % (process_nr, nr_processes))
+            process_nr += 1
+            print('progress: %d/%d' % (process_nr, nr_processes))
 
 
 if __name__ == '__main__':
