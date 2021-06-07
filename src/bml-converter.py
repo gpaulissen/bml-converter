@@ -1,7 +1,5 @@
-import os
 from os import listdir
-from os.path import isfile, join, dirname
-import argparse
+from os.path import isfile, join
 from gooey import Gooey, GooeyParser
 
 from bml import about
@@ -10,6 +8,7 @@ from bml import bss
 from bml import html
 from bml import latex
 from bss import bss2bml
+
 
 @Gooey(default_size=(600, 900),
        progress_regex=r"^progress: (?P<current>\d+)/(?P<total>\d+)$",
@@ -41,7 +40,7 @@ def main():
     file_group.add_argument(
         'inputdir',
         help="Directory with BML/BSS file(s)",
-        widget='DirChooser') 
+        widget='DirChooser')
     file_group.add_argument(
         'outputdir',
         help="Output directory",
@@ -95,7 +94,6 @@ def main():
         widget='BlockCheckbox')
     other_group.add_argument(
         "--verbose",
-#       action="count",
         type=int,
         choices=range(0, 3),
         default=bml.args.verbose,
@@ -111,7 +109,7 @@ def main():
 
     bml_files = [f for f in listdir(bml.args.inputdir) if isfile(join(bml.args.inputdir, f)) and f[-4:] == '.bml' and nr_bml_processes > 0]
     bss_files = [f for f in listdir(bml.args.inputdir) if isfile(join(bml.args.inputdir, f)) and f[-4:] == '.bss' and nr_bss_processes > 0]
-    
+
     nr_processes = nr_bml_processes * len(bml_files) + nr_bss_processes * len(bss_files)
 
     assert nr_processes > 0, 'Number of files to process (%d) and number of generators to launch (%d) must be at least 1.' % ((len(bml_files) + len(bss_files)), (nr_bml_processes + nr_bss_processes))
@@ -121,7 +119,7 @@ def main():
     if nr_bml_processes > 0:
         for f in sorted(bml_files):
             bml.args.inputfile = f
-            content = None # parse each input file just once 
+            content = None  # parse each input file just once
             for c in ['bml2bss', 'bml2html', 'bml2latex']:
                 if c == 'bml2bss' and bml.args.bml2bss:
                     content = bss.bml2bss(bml.args.inputfile, bml.args.outputdir, content=content)
@@ -133,7 +131,7 @@ def main():
                     continue
                 process_nr += 1
                 print('progress: %d/%d' % (process_nr, nr_processes))
-    
+
     if nr_bss_processes > 0:
         for f in sorted(bss_files):
             bml.args.inputfile = f
