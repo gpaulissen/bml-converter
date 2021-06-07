@@ -9,7 +9,7 @@ block_cipher = None
 
 
 a = Analysis(['bml-converter.py'],
-             pathex=['c:\\dev\\bml-converters\\src'],
+             pathex=['c:\\dev\\bml-converter\\src'],
              binaries=[],
              datas=datas,
              hiddenimports=[],
