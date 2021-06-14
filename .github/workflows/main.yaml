@@ -28,7 +28,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: src/dist/windows/bml-converter.zip
+        file: src/dist/windows
         asset_name: bml-converter-$tag.zip
         tag: ${{ github.ref }}
         overwrite: true
