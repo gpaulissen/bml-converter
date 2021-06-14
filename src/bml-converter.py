@@ -1,5 +1,8 @@
-from os import listdir
-from os.path import isfile, join
+import re
+from os import listdir, getcwd, chdir
+from os.path import isfile, join, split, splitext
+import subprocess
+import pkg_resources
 from gooey import Gooey, GooeyParser
 
 from bml import about
@@ -8,6 +11,29 @@ from bml import bss
 from bml import html
 from bml import latex
 from bss import bss2bml
+
+
+def check_environment():
+    latexmk = False
+
+    programs = [
+        ['latexmk', '-version', '4.0.0', r'Version ([0-9.]+)'],
+    ]
+
+    for i, p in enumerate(programs):
+        proc = subprocess.run(p[0:2], shell=False, capture_output=True, text=True)
+        assert proc.returncode == 0, proc.stderr
+        expected_version = p[2]
+        regex = p[3]
+        try:
+            m = re.search(regex, proc.stdout)
+            assert m, 'Could not find {} in {}'.format(regex, proc.stdout)
+            actual_version = m.group(1)
+            assert pkg_resources.packaging.version.parse(actual_version) >= pkg_resources.packaging.version.parse(expected_version), f'Version of program "{p[0]}" is "{actual_version}" which is less than the expected version "{expected_version}"'
+            latexmk = True
+        except Exception:
+            pass
+    return latexmk
 
 
 @Gooey(default_size=(600, 900),
@@ -34,6 +60,7 @@ from bss import bss2bml
            }]
        }])
 def main():
+    latexmk = check_environment()
     parser = GooeyParser(description='BML convert')
 
     file_group = parser.add_argument_group("File options", "Specify input file and output directory")
@@ -54,8 +81,8 @@ def main():
         action='store_true',
         default=True)
     generate_group.add_argument(
-        '--bml2latex',
-        help='BML => LaTeX',
+        '--bml2latex' if not(latexmk) else '--bml2pdf',
+        help='BML => LaTeX' if not(latexmk) else 'BML => PDF',
         dest='bml2latex',
         action='store_true')
     generate_group.add_argument(
@@ -114,23 +141,48 @@ def main():
 
     assert nr_processes > 0, 'Number of files to process (%d) and number of generators to launch (%d) must be at least 1.' % ((len(bml_files) + len(bss_files)), (nr_bml_processes + nr_bss_processes))
 
-    process_nr = 0
+    chdir(bml.args.inputdir)
 
+    process_nr = 0
+    latexfiles = []
     if nr_bml_processes > 0:
         for f in sorted(bml_files):
             bml.args.inputfile = f
+            if bml.args.verbose:
+                print('input file: {}'.format(bml.args.inputfile))
             content = None  # parse each input file just once
             for c in ['bml2bss', 'bml2html', 'bml2latex']:
                 if c == 'bml2bss' and bml.args.bml2bss:
+                    if bml.args.verbose:
+                        print('current directory before bml2bss: {}'.format(getcwd()))
                     content = bss.bml2bss(bml.args.inputfile, bml.args.outputdir, content=content)
                 elif c == 'bml2html' and bml.args.bml2html:
+                    if bml.args.verbose:
+                        print('current directory before bml2html: {}'.format(getcwd()))
                     content = html.bml2html(bml.args.inputfile, bml.args.outputdir, content=content)
                 elif c == 'bml2latex' and bml.args.bml2latex:
+                    if bml.args.verbose:
+                        print('current directory before bml2latex: {}'.format(getcwd()))
                     content = latex.bml2latex(bml.args.inputfile, bml.args.outputdir, content=content)
+                    if latexmk:
+                        dirname, basename = split(bml.args.inputfile)
+                        basename, ext = splitext(basename)
+                        latexfile = join(bml.args.outputdir, basename + ".tex")
+                        latexfiles.append(latexfile)
+                        if bml.args.verbose:
+                            print('latex file: {}; output directory: {}'.format(latexfile, bml.args.outputdir))
+                        subprocess.run(['latexmk', '-quiet', '-pdf', '-output-directory=' + bml.args.outputdir, latexfile], check=True, shell=False)
                 else:
                     continue
                 process_nr += 1
                 print('progress: %d/%d' % (process_nr, nr_processes))
+
+    if len(latexfiles) > 0:
+        # cleanup
+        cmd = ['latexmk', '-c', '-f', '-output-directory=' + bml.args.outputdir]
+        for latexfile in latexfiles:
+            cmd.append(latexfile)
+        subprocess.run(cmd, check=True, shell=False)
 
     if nr_bss_processes > 0:
         for f in sorted(bss_files):
