@@ -24,6 +24,13 @@ $ pip install -r requirements.txt
 
 You may need to use pip3 instead of pip if pip does not point to a Python 3 installation.
 
+## Install LaTeX
+
+In order to create PDFs you need to install LaTeX. There are several
+distributions available. On Windows [MiKTeX](https://miktex.org/) is a good
+option. The executable latexmk must be in the PATH otherwise the GUI will not
+display the option to convert BML to PDF.
+
 # Usage
 
 ## Launch the Python script src/bml-converter.py
