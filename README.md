@@ -22,6 +22,9 @@ $ cd src
 $ pip install -r requirements.txt
 ```
 
+First please note that the dollar sign is the prmpt sign and not a character you have to type.
+Next, please do move into src first, since the root also contains a (different) `requirements.txt`.
+
 You may need to use pip3 instead of pip if pip does not point to a Python 3 installation.
 
 ## Install LaTeX
@@ -31,12 +34,38 @@ distributions available. On Windows [MiKTeX](https://miktex.org/) is a good
 option. The executable latexmk must be in the PATH otherwise the GUI will not
 display the option to convert BML to PDF.
 
+### Latex packages
+
+The following packages are needed for BML: dirtree, listliketab, parskip, pbox and txfonts.
+
+Install them like this:
+
+```
+$ tlmgr install dirtree listliketab parskip pbox txfonts
+```
+
+### Perl
+
+Since latexmk will usually need Perl, please install Perl. On Unix and Mac OS X this won't be necessary since Perl should already have been installed. On Windows you can download [Strawberry Perl](https://strawberryperl.com/).
+
+On Unix or Mac OS X you can verify that Perl is installed with:
+
+```
+$ which perl
+```
+
+On Windows:
+
+```
+$ where perl
+```
+
 # Usage
 
 ## Launch the Python script src/bml-converter.py
 
-This can be done directory from a command prompt or by using a (Windows)
-shortcut or Unix alias.
+This can be done directory from a command prompt or by creating a (Windows)
+shortcut on your Desktop (right mouse click, choose New) or an alias on Unix/Mac OS X.
 
 Using the command prompt:
 

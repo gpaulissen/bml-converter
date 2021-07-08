@@ -36,7 +36,7 @@ def check_environment():
     return latexmk
 
 
-@Gooey(default_size=(600, 900),
+@Gooey(default_size=(600, 650),
        progress_regex=r"^progress: (?P<current>\d+)/(?P<total>\d+)$",
        progress_expr="current / total * 100",
        optional_cols=4,
@@ -63,7 +63,7 @@ def main():
     latexmk = check_environment()
     parser = GooeyParser(description='BML convert')
 
-    file_group = parser.add_argument_group("File options", "Specify input file and output directory")
+    file_group = parser.add_argument_group("File options", "Specify input directory and output directory")
     file_group.add_argument(
         'inputdir',
         help="Directory with BML/BSS file(s)",
