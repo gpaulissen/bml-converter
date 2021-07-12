@@ -22,7 +22,7 @@ $ cd src
 $ pip install -r requirements.txt
 ```
 
-First please note that the dollar sign is the prmpt sign and not a character you have to type.
+First please note that the dollar sign is the prompt sign and not a character you have to type.
 Next, please do move into src first, since the root also contains a (different) `requirements.txt`.
 
 You may need to use pip3 instead of pip if pip does not point to a Python 3 installation.
